@@ -1,0 +1,7 @@
+services:
+  fleetsafe:
+    build: .
+    ports: ["8000:8000"]
+    environment:
+      FLEET_SIZE: "100000"
+      JWT_SECRET: "${JWT_SECRET:-dev-only-change-me}"

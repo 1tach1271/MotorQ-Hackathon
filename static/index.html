@@ -1,0 +1,35 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FleetSafe</title>
+<style>
+:root{--bg:#f3f5f7;--ink:#14222e;--mut:#5d6b78;--line:#d5dbe1;--card:#fff;--red:#c8302b;--amb:#d98a00}
+@media(prefers-color-scheme:dark){:root{--bg:#10171d;--ink:#e6edf3;--mut:#93a1ae;--line:#26323d;--card:#17212a}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Segoe UI",system-ui,sans-serif}
+main{max-width:1000px;margin:0 auto;padding:24px 16px}h1{font-size:26px;margin:0 0 4px}p.s{color:var(--mut);margin:0 0 20px}
+.row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px}.k{flex:1 1 150px;background:var(--card);border:1px solid var(--line);padding:12px 14px;border-radius:6px}
+.k b{display:block;font-size:24px}.k span{color:var(--mut);font-size:13px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:760px){.cols{grid-template-columns:1fr}}
+section{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:14px;overflow-x:auto}h2{font-size:16px;margin:0 0 8px}
+table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:6px 4px;border-bottom:1px solid var(--line);font-size:13px}
+.sc{font-weight:700}.lo{color:var(--red)}.mid{color:var(--amb)}
+form{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}input,button{font:inherit;padding:7px 10px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink)}
+button{background:var(--ink);color:var(--bg);cursor:pointer}button:focus-visible,input:focus-visible{outline:2px solid var(--amb)}
+</style></head><body><main>
+<h1>FleetSafe</h1><p class="s">Live driver-safety scores from the simulated vehicle stream.</p>
+<form id="f"><input id="u" value="manager1" aria-label="Username"><input id="p" type="password" value="pass1" aria-label="Password"><button>Sign in</button><span id="msg"></span></form>
+<div class="row" id="k"></div>
+<div class="cols"><section><h2>Riskiest drivers now</h2><table id="w"><tr><td>Sign in to see data.</td></tr></table></section>
+<section><h2>Latest alerts</h2><table id="a"><tr><td>Sign in to see data.</td></tr></table></section></div>
+</main><script>
+let T=null;const $=id=>document.getElementById(id);
+const api=async p=>{const r=await fetch(p,{headers:{Authorization:"Bearer "+T}});if(!r.ok)throw new Error(r.status);return r.json()};
+$("f").onsubmit=async e=>{e.preventDefault();const r=await fetch(`/token?username=${$("u").value}&password=${$("p").value}`,{method:"POST"});
+ if(!r.ok){$("msg").textContent="Wrong username or password.";return}T=(await r.json()).access_token;$("msg").textContent="";tick();};
+const cls=s=>s<60?"lo":s<85?"mid":"";
+async function tick(){if(!T)return;try{
+ const s=await api("/api/summary"),w=await api("/api/drivers/worst?k=8"),a=await api("/api/alerts?limit=8");
+ $("k").innerHTML=[["Vehicles in this fleet",s.vehicles.toLocaleString()],["Events per second",s.events_per_sec.toLocaleString()],["Alerts raised",s.alerts_total.toLocaleString()],["Duplicates dropped",s.dedup_dropped.toLocaleString()],["Batch time (ms)",s.tick_ms]].map(([l,v])=>`<div class="k"><b>${v}</b><span>${l}</span></div>`).join("");
+ $("w").innerHTML="<tr><th>VIN</th><th>Score</th></tr>"+(w.map(x=>`<tr><td>${x.vin}</td><td class="sc ${cls(x.score)}">${x.score}</td></tr>`).join("")||"<tr><td colspan=2>No risky driving yet.</td></tr>");
+ $("a").innerHTML="<tr><th>VIN</th><th>Event</th><th>Score</th></tr>"+(a.items.map(x=>`<tr><td>${x.vin}</td><td>${x.evt.replace("_"," ").toLowerCase()}</td><td class="sc lo">${x.score}</td></tr>`).join("")||"<tr><td colspan=3>No alerts yet.</td></tr>");
+}catch(e){$("msg").textContent="Session ended. Sign in again.";T=null}}
+setInterval(tick,2000);
+</script></body></html>
