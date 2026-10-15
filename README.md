@@ -8,3 +8,5 @@ Local: `pip install -r requirements.txt && uvicorn app.main:app`   Tests: `pytes
 
 Implemented: simulator (duplicates, late events), idempotent ingest (per-vehicle seq), sliding-window score (O(1) amortised), top-K riskiest (heap, O(n log k)), alert hysteresis, SQLite relational store (tenant/vehicle/alert/audit), keyset pagination, HMAC-signed JWT, tenant isolation, per-user rate limit, audit log.
 Not implemented (prototype limits): Kafka, TimescaleDB/Redis, ML model, Helm/Terraform, mTLS, load/chaos tests.
+## Presentation Video
+- https://drive.google.com/file/d/14hMzNQrSKaj3FYjz-XDlhlcSqSVltHbU/view?usp=sharing
